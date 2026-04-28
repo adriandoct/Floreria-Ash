@@ -131,3 +131,13 @@ CREATE POLICY "Admins can view all orders."
   ON public.orders FOR SELECT
   USING ( auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' );
 
+-- Insertar productos demo
+INSERT INTO public.products (name, price, image, inventory)
+VALUES 
+  ('Ramo Primaveral', 450, 'https://images.unsplash.com/photo-1563241598-6dc3a964063f?q=80&w=600&auto=format&fit=crop', 10),
+  ('Rosas Eternas', 800, 'https://images.unsplash.com/photo-1582791694770-bd600642cebf?q=80&w=600&auto=format&fit=crop', 10),
+  ('Caja de Tulipanes', 650, 'https://images.unsplash.com/photo-1520764816124-749e7552debc?q=80&w=600&auto=format&fit=crop', 10),
+  ('Peonías Rosas', 900, 'https://images.unsplash.com/photo-1568867597148-73b342416b9b?q=80&w=600&auto=format&fit=crop', 10),
+  ('Girasoles Sol', 550, 'https://images.unsplash.com/photo-1559868669-e05fae3e4a3c?q=80&w=600&auto=format&fit=crop', 10),
+  ('Orquídea Elegante', 1200, 'https://images.unsplash.com/photo-1568212108740-10901e9be615?q=80&w=600&auto=format&fit=crop', 10)
+ON CONFLICT DO NOTHING;
