@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import AuthPage from './pages/Auth';
 import AdminDashboard from './pages/AdminDashboard';
+import Checkout from './pages/Checkout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route 
             path="/admin" 
             element={

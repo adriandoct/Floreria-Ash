@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Package, ShoppingBag, Users, Settings } from 'lucide-react';
+import AdminProducts from '../components/AdminProducts';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -58,15 +59,7 @@ export default function AdminDashboard() {
             )}
             
             {activeTab === 'products' && (
-              <div className="admin-panel">
-                <div className="panel-header">
-                  <h2>Gestión de Catálogo</h2>
-                  <button className="btn btn-primary">Agregar Producto</button>
-                </div>
-                <div className="empty-state">
-                  <p>Tu catálogo tiene 6 productos. Aquí podrás editarlos próximamente.</p>
-                </div>
-              </div>
+              <AdminProducts />
             )}
 
             {activeTab === 'users' && (
