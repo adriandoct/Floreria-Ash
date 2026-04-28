@@ -7,6 +7,8 @@ import './Auth.css';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('user');
   const [isSignUp, setIsSignUp] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -19,14 +21,19 @@ export default function Auth() {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
-          password: 'Password123!', // Dummy password for magic link / or we can add a password field.
+          password,
+          options: {
+            data: {
+              role: role,
+            }
+          }
         });
         if (error) throw error;
         setMessage({ text: 'Revisa tu correo para el enlace de confirmación!', type: 'success' });
       } else {
-        const { error } = await supabase.auth.signInWithOtp({ email });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        setMessage({ text: '¡Enlace mágico enviado a tu correo!', type: 'success' });
+        setMessage({ text: '¡Inicio de sesión exitoso!', type: 'success' });
       }
     } catch (error) {
       setMessage({ text: error.error_description || error.message, type: 'error' });
@@ -64,9 +71,37 @@ export default function Auth() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
+
+          <div className="input-group">
+            <label htmlFor="password">Contraseña</label>
+            <input
+              id="password"
+              className="auth-input"
+              type="password"
+              placeholder="Tu contraseña"
+              value={password}
+              required
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          
+          {isSignUp && (
+            <div className="input-group">
+              <label htmlFor="role">Rol</label>
+              <select
+                id="role"
+                className="auth-input"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="user">Usuario</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+          )}
           
           <button className="btn btn-primary auth-submit" disabled={loading}>
-            {loading ? 'Cargando...' : isSignUp ? 'Registrarse' : 'Enviar Enlace Mágico'}
+            {loading ? 'Cargando...' : isSignUp ? 'Registrarse' : 'Iniciar Sesión'}
           </button>
         </form>
 
@@ -77,7 +112,7 @@ export default function Auth() {
         )}
 
         <div className="auth-toggle">
-          <button onClick={() => setIsSignUp(!isSignUp)} className="text-primary">
+          <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-primary">
             {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
           </button>
         </div>

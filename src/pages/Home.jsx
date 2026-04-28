@@ -24,6 +24,9 @@ const mockProducts = [
   { id: 1, name: 'Ramo Primaveral', price: 450, image: 'https://images.unsplash.com/photo-1563241598-6dc3a964063f?q=80&w=600&auto=format&fit=crop' },
   { id: 2, name: 'Rosas Eternas', price: 800, image: 'https://images.unsplash.com/photo-1582791694770-bd600642cebf?q=80&w=600&auto=format&fit=crop' },
   { id: 3, name: 'Caja de Tulipanes', price: 650, image: 'https://images.unsplash.com/photo-1520764816124-749e7552debc?q=80&w=600&auto=format&fit=crop' },
+  { id: 4, name: 'Peonías Rosas', price: 900, image: 'https://images.unsplash.com/photo-1568867597148-73b342416b9b?q=80&w=600&auto=format&fit=crop' },
+  { id: 5, name: 'Girasoles Sol', price: 550, image: 'https://images.unsplash.com/photo-1559868669-e05fae3e4a3c?q=80&w=600&auto=format&fit=crop' },
+  { id: 6, name: 'Orquídea Elegante', price: 1200, image: 'https://images.unsplash.com/photo-1568212108740-10901e9be615?q=80&w=600&auto=format&fit=crop' }
 ];
 
 function Home() {
@@ -62,7 +65,7 @@ function Home() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <img 
-              src="/hero.png" 
+              src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?q=80&w=1000&auto=format&fit=crop" 
               alt="Arreglo Floral" 
               className="hero-image"
             />
