@@ -8,8 +8,8 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('user');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
   const handleAuth = async (e) => {
@@ -18,13 +18,19 @@ export default function Auth() {
     setMessage({ text: '', type: '' });
 
     try {
-      if (isSignUp) {
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/auth', // o donde quieras redirigir para cambiar la clave
+        });
+        if (error) throw error;
+        setMessage({ text: '¡Correo de recuperación enviado! Revisa tu bandeja de entrada.', type: 'success' });
+      } else if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
-              role: role,
+              role: 'user', // Hardcodeado a 'user'
             }
           }
         });
@@ -54,8 +60,10 @@ export default function Auth() {
           <div className="auth-icon">
             <Flower size={40} color="var(--primary)" />
           </div>
-          <h2 className="heading">{isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}</h2>
-          <p>Bienvenido a Florería Ash</p>
+          <h2 className="heading">
+            {isForgotPassword ? 'Recuperar Contraseña' : isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
+          </h2>
+          <p>{isForgotPassword ? 'Te enviaremos un enlace para restaurar tu clave' : 'Bienvenido a Florería Ash'}</p>
         </div>
 
         <form onSubmit={handleAuth} className="auth-form">
@@ -72,36 +80,23 @@ export default function Auth() {
             />
           </div>
 
-          <div className="input-group">
-            <label htmlFor="password">Contraseña</label>
-            <input
-              id="password"
-              className="auth-input"
-              type="password"
-              placeholder="Tu contraseña"
-              value={password}
-              required
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          
-          {isSignUp && (
+          {!isForgotPassword && (
             <div className="input-group">
-              <label htmlFor="role">Rol</label>
-              <select
-                id="role"
+              <label htmlFor="password">Contraseña</label>
+              <input
+                id="password"
                 className="auth-input"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="user">Usuario</option>
-                <option value="admin">Administrador</option>
-              </select>
+                type="password"
+                placeholder="Tu contraseña"
+                value={password}
+                required
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
           )}
           
           <button className="btn btn-primary auth-submit" disabled={loading}>
-            {loading ? 'Cargando...' : isSignUp ? 'Registrarse' : 'Iniciar Sesión'}
+            {loading ? 'Cargando...' : isForgotPassword ? 'Enviar Correo' : isSignUp ? 'Registrarse' : 'Iniciar Sesión'}
           </button>
         </form>
 
@@ -112,9 +107,22 @@ export default function Auth() {
         )}
 
         <div className="auth-toggle">
-          <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-primary">
-            {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
-          </button>
+          {!isForgotPassword ? (
+            <>
+              <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-primary" style={{display: 'block', marginBottom: '10px'}}>
+                {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+              </button>
+              {!isSignUp && (
+                <button type="button" onClick={() => setIsForgotPassword(true)} className="text-primary">
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
+            </>
+          ) : (
+            <button type="button" onClick={() => setIsForgotPassword(false)} className="text-primary">
+              Volver al inicio de sesión
+            </button>
+          )}
         </div>
       </motion.div>
     </div>
