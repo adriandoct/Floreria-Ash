@@ -141,3 +141,23 @@ VALUES
   ('Girasoles Sol', 550, 'https://images.unsplash.com/photo-1559868669-e05fae3e4a3c?q=80&w=600&auto=format&fit=crop', 10),
   ('Orquídea Elegante', 1200, 'https://images.unsplash.com/photo-1568212108740-10901e9be615?q=80&w=600&auto=format&fit=crop', 10)
 ON CONFLICT DO NOTHING;
+
+-- Configuración de Storage para subir imágenes
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('product-images', 'product-images', true) 
+ON CONFLICT DO NOTHING;
+
+-- Permitir a cualquier persona ver las imágenes
+CREATE POLICY "Public Access" 
+ON storage.objects FOR SELECT 
+USING ( bucket_id = 'product-images' );
+
+-- Permitir a los administradores subir imágenes
+CREATE POLICY "Admin Insert" 
+ON storage.objects FOR INSERT 
+WITH CHECK ( bucket_id = 'product-images' AND auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' );
+
+-- Permitir a los administradores borrar imágenes
+CREATE POLICY "Admin Delete" 
+ON storage.objects FOR DELETE 
+USING ( bucket_id = 'product-images' AND auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' );

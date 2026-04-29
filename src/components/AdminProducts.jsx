@@ -9,6 +9,8 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', price: '', image: '', inventory: '' });
+  const [imageFile, setImageFile] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -37,14 +39,45 @@ export default function AdminProducts() {
   function handleCloseModal() {
     setIsModalOpen(false);
     setEditingProduct(null);
+    setImageFile(null);
   }
 
   async function handleSave(e) {
     e.preventDefault();
+    setUploadingImage(true);
+
+    let imageUrl = formData.image;
+
+    // Subir imagen a Supabase Storage si se seleccionó un archivo
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, imageFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        alert('Error al subir la imagen: ' + uploadError.message);
+        setUploadingImage(false);
+        return;
+      }
+
+      // Obtener la URL pública de la imagen
+      const { data: publicUrlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+        
+      imageUrl = publicUrlData.publicUrl;
+    }
+
     const productData = {
       name: formData.name,
       price: parseFloat(formData.price),
-      image: formData.image,
+      image: imageUrl,
       inventory: parseInt(formData.inventory, 10),
     };
 
@@ -55,6 +88,7 @@ export default function AdminProducts() {
       const { error } = await supabase.from('products').insert([productData]);
       if (!error) fetchProducts();
     }
+    setUploadingImage(false);
     handleCloseModal();
   }
 
@@ -142,13 +176,16 @@ export default function AdminProducts() {
                 />
               </div>
               <div className="input-group">
-                <label>URL de Imagen</label>
+                <label>Imagen del Producto</label>
                 <input 
-                  type="url" 
-                  required 
-                  value={formData.image} 
-                  onChange={e => setFormData({...formData, image: e.target.value})} 
+                  type="file" 
+                  accept="image/*"
+                  onChange={e => setImageFile(e.target.files[0])} 
+                  required={!editingProduct}
                 />
+                {editingProduct && formData.image && !imageFile && (
+                  <p className="text-sm mt-2 text-gray-500">Deja este campo vacío para conservar la imagen actual.</p>
+                )}
               </div>
               <div className="input-group">
                 <label>Inventario (Unidades)</label>
@@ -159,8 +196,8 @@ export default function AdminProducts() {
                   onChange={e => setFormData({...formData, inventory: e.target.value})} 
                 />
               </div>
-              <button type="submit" className="btn btn-primary full-width">
-                Guardar Producto
+              <button type="submit" className="btn btn-primary full-width" disabled={uploadingImage}>
+                {uploadingImage ? 'Guardando...' : 'Guardar Producto'}
               </button>
             </form>
           </div>
