@@ -62,7 +62,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200, // Retornamos 200 para que el cliente Supabase no oculte el mensaje de error
       }
     )
   }

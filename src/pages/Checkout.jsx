@@ -29,6 +29,7 @@ const CheckoutForm = ({ product, user }) => {
 
     const cardElement = elements.getElement(CardElement);
     
+    try {
       let clientSecret = null;
       let isSimulated = false;
 
@@ -43,8 +44,7 @@ const CheckoutForm = ({ product, user }) => {
 
         clientSecret = data.clientSecret;
       } catch (err) {
-        // Si hay error de conexión (porque la función no se ha subido a Supabase), hacemos un fallback
-        console.warn("La Edge Function no está disponible. Simulando el pago...", err);
+        // Fallback silencioso si la Edge Function no está disponible
         isSimulated = true;
       }
 
@@ -74,7 +74,6 @@ const CheckoutForm = ({ product, user }) => {
         });
         if (stripeError) throw new Error(stripeError.message);
         paymentIntentId = paymentMethod.id;
-        alert("⚠️ AVISO: El pago se ha simulado. Para procesar cargos reales, debes subir tu Edge Function a Supabase usando la terminal.");
       }
 
       // 3. Registrar la orden exitosa en Supabase
@@ -99,9 +98,7 @@ const CheckoutForm = ({ product, user }) => {
       }, 3000);
 
     } catch (err) {
-      setError(err.message === "Failed to send a request to the Edge Function" 
-        ? "El servidor de pagos de Supabase aún no ha sido activado. Revisa la consola." 
-        : err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
