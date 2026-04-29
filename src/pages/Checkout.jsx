@@ -8,7 +8,7 @@ import { ShieldCheck, ArrowLeft } from 'lucide-react';
 import './Checkout.css';
 
 // Reemplaza con tu clave pública de Stripe
-const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
+const stripePromise = loadStripe('pk_live_51P8ZPDP3zWNMANgdPHbE2MaDtWFzDauSeEmpNKkpd6P2w4KWRv2avT40UbVkacCbT2Fb5xFZlkKnJdnxgiWex1c500DPL1WPeN');
 
 const CheckoutForm = ({ product, user }) => {
   const stripe = useStripe();
@@ -28,24 +28,37 @@ const CheckoutForm = ({ product, user }) => {
     }
 
     const cardElement = elements.getElement(CardElement);
-    const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-    });
+    
+    try {
+      // 1. Llamar a la Edge Function para crear el Payment Intent
+      const { data, error: functionError } = await supabase.functions.invoke('create-payment-intent', {
+        body: { productId: product.id }
+      });
 
-    if (stripeError) {
-      setError(stripeError.message);
-      setLoading(false);
-    } else {
-      // Aquí enviarías paymentMethod.id a tu backend (Edge Function) para confirmar el pago.
-      // Como estamos simulando, guardaremos la orden directamente en Supabase.
-      try {
+      if (functionError) throw new Error('Error de conexión con el servidor de pago: ' + functionError.message);
+      if (data?.error) throw new Error(data.error);
+
+      const clientSecret = data.clientSecret;
+
+      // 2. Confirmar el pago en el cliente usando el client_secret
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+        }
+      });
+
+      if (stripeError) {
+        throw new Error(stripeError.message);
+      }
+
+      if (paymentIntent.status === 'succeeded') {
+        // 3. Registrar la orden exitosa en Supabase
         const { error: orderError } = await supabase.from('orders').insert([{
           user_id: user?.id || null,
           product_id: product.id,
           amount: product.price,
           status: 'paid',
-          payment_method_id: paymentMethod.id
+          payment_method_id: paymentIntent.id
         }]);
         
         if (orderError) throw orderError;
@@ -59,9 +72,10 @@ const CheckoutForm = ({ product, user }) => {
         setTimeout(() => {
           navigate('/');
         }, 3000);
-      } catch (err) {
-        setError('Error al procesar la orden: ' + err.message);
       }
+    } catch (err) {
+      setError(err.message);
+    } finally {
       setLoading(false);
     }
   };
